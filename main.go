@@ -33,21 +33,27 @@ func getMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	//Director Instance
-	director := Director{
-		ID:        "12",
-		FirstName: "Cristopher",
-		LastName:  "Nolan",
+	//Make collection
+	var collection1 = Movie{
+		ID:    "123",
+		Name:  "The Conjuring",
+		Genre: "Horror",
+		ISAN:  "0000-0000-9E5F-0000-2-0000-0000-K",
+		Director: &Director{ID: "12",
+			FirstName: "Cristopher",
+			LastName:  "Nolan"},
 	}
-	//Movie Data
-	movie := Movie{
-		ID:       "123",
-		Name:     "The Conjuring",
-		Genre:    "Horror",
-		ISAN:     "0000-0000-9E5F-0000-2-0000-0000-K",
-		Director: &director,
+	var collection2 = Movie{
+		ID:    "124",
+		Name:  "The Insidious",
+		Genre: "Horror",
+		ISAN:  "0000-0004-2E5A-0000-8-0030-0100-A",
+		Director: &Director{ID: "4",
+			FirstName: "Adam",
+			LastName:  "Warlock"},
 	}
-	movies = append(movies, movie)
+
+	movies = append(movies, collection1, collection2)
 
 	http.HandleFunc("/movies", getMovies)
 	// http.HandleFunc("/movies/", getMovie())
