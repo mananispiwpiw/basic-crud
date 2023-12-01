@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -18,9 +19,12 @@ type Movie struct {
 	Director *Director `json:"director"`
 }
 
-// func getMovies(w http.ResponseWriter, r *http.Request) {
+var movies []Movie
 
-// }
+func getMovies(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(movies)
+}
 
 func main() {
 	//Director Instance
@@ -37,11 +41,9 @@ func main() {
 		ISAN:     "0000-0000-9E5F-0000-2-0000-0000-K",
 		Director: &director,
 	}
-	//Struct Test
-	fmt.Println("Movie Name: ", movie.Name)
-	fmt.Println("Movie Director: ", movie.Director.FirstName+" "+movie.Director.LastName)
+	movies = append(movies, movie)
 
-	// http.HandleFunc("/movies", getMovies())
+	http.HandleFunc("/movies", getMovies)
 	// http.HandleFunc("/movies/", getMovie())
 	// http.HandleFunc("/movies", createMovie())
 	// http.HandleFunc("/movies/", updateMovie())
