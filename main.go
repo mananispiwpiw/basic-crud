@@ -22,6 +22,12 @@ type Movie struct {
 var movies []Movie
 
 func getMovies(w http.ResponseWriter, r *http.Request) {
+	//Check if request Method type is not GET
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed!", http.StatusMethodNotAllowed)
+		return
+	}
+	//And if it is the correct method, it will continue to here
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(movies)
 }
