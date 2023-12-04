@@ -83,10 +83,7 @@ func getMovie(w http.ResponseWriter, r *http.Request) {
 
 	//Return the response as JSON
 	w.Header().Set("Content-Type", "application/json")
-
-	fmt.Fprintf(w, "Movie Details:\nID: %s\nName: %s\nGenre: %s\nISAN: %s\nDirector: %s %s",
-		movie.ID, movie.Name, movie.Genre, movie.ISAN, movie.Director.FirstName, movie.Director.LastName)
-
+	json.NewEncoder(w).Encode(movie)
 }
 
 func main() {
