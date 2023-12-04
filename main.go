@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 )
 
 type Director struct {
@@ -19,7 +20,33 @@ type Movie struct {
 	Director *Director `json:"director"`
 }
 
-var movies []Movie
+// Make map, for database mocking
+var movieDatabase = map[string]Movie{
+	"123": {
+		ID:    "123",
+		Name:  "The conjurinng",
+		Genre: "Horror",
+		ISAN:  "0000-0000-E5F-0000-2-0000-0000-K",
+		Director: &Director{
+			ID:        "12",
+			FirstName: "Christopher",
+			LastName:  "Nolan",
+		},
+	},
+	"124": {
+		ID:    "124",
+		Name:  "The Insidious",
+		Genre: "Horror",
+		ISAN:  "0000-0004-2E5A-0000-8-000-0100-A",
+		Director: &Director{
+			ID:        "4",
+			FirstName: "Adam",
+			LastName:  "Warlock",
+		},
+	},
+}
+
+//var movies []movieDatabase
 
 func getMovies(w http.ResponseWriter, r *http.Request) {
 	//Check if request Method type is not GET
@@ -29,37 +56,45 @@ func getMovies(w http.ResponseWriter, r *http.Request) {
 	}
 	//And if it is the correct method, it will continue to here
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(movies)
+	json.NewEncoder(w).Encode(movieDatabase)
+}
+
+func getMovie(w http.ResponseWriter, r *http.Request) {
+	//Check if request Method type is not GET
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed!", http.StatusMethodNotAllowed)
+		return
+	}
+	//Extract the ID from the URL
+	re := regexp.MustCompile(`/movies/(\d+)`)
+	match := re.FindStringSubmatch(r.URL.Path)
+	if len(match) != 2 {
+		http.NotFound(w, r)
+		return
+	}
+	movieID := match[1]
+
+	//Look up the movie in the database
+	movie, found := movieDatabase[movieID]
+	if !found {
+		http.NotFound(w, r)
+		return
+	}
+
+	//Return the response as JSON
+	w.Header().Set("Content-Type", "application/json")
+
+	fmt.Fprintf(w, "Movie Details:\nID: %s\nName: %s\nGenre: %s\nISAN: %s\nDirector: %s %s",
+		movie.ID, movie.Name, movie.Genre, movie.ISAN, movie.Director.FirstName, movie.Director.LastName)
+
 }
 
 func main() {
-	//Make collection
-	var collection1 = Movie{
-		ID:    "123",
-		Name:  "The Conjuring",
-		Genre: "Horror",
-		ISAN:  "0000-0000-9E5F-0000-2-0000-0000-K",
-		Director: &Director{ID: "12",
-			FirstName: "Cristopher",
-			LastName:  "Nolan"},
-	}
-	var collection2 = Movie{
-		ID:    "124",
-		Name:  "The Insidious",
-		Genre: "Horror",
-		ISAN:  "0000-0004-2E5A-0000-8-0030-0100-A",
-		Director: &Director{ID: "4",
-			FirstName: "Adam",
-			LastName:  "Warlock"},
-	}
-
-	movies = append(movies, collection1, collection2)
-
 	http.HandleFunc("/movies", getMovies)
-	// http.HandleFunc("/movies/", getMovie())
-	// http.HandleFunc("/movies", createMovie())
-	// http.HandleFunc("/movies/", updateMovie())
-	// http.HandleFunc("/movies/", deleteMovie())
+	http.HandleFunc("/movies/", getMovie)
+	// http.HandleFunc("/movies", createMovie)
+	// http.HandleFunc("/movies/", updateMovie)
+	// http.HandleFunc("/movies/", deleteMovie)
 
 	var address = "localhost:8080"
 	fmt.Printf("Server started at %s\n", address)
