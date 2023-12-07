@@ -79,8 +79,12 @@ func handlerMovies(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(movie)
 	} else if r.Method == http.MethodDelete { //Check if request Method type is GET
+		//Perform deletion
+		delete(movieDatabase, movieID)
+
+		//Return the response
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Println(match)
+		json.NewEncoder(w).Encode(movieDatabase)
 	} else {
 		http.Error(w, "Method not allowed!", http.StatusMethodNotAllowed)
 		return
