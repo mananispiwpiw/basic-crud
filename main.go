@@ -46,8 +46,6 @@ var movieDatabase = map[string]Movie{
 	},
 }
 
-//var movies []movieDatabase
-
 func getMovies(w http.ResponseWriter, r *http.Request) {
 	//Check if request Method type is not GET
 	if r.Method != http.MethodGet {
@@ -59,12 +57,7 @@ func getMovies(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(movieDatabase)
 }
 
-func getMovie(w http.ResponseWriter, r *http.Request) {
-	//Check if request Method type is not GET
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed!", http.StatusMethodNotAllowed)
-		return
-	}
+func handlerMovies(w http.ResponseWriter, r *http.Request) {
 	//Extract the ID from the URL
 	re := regexp.MustCompile(`/movies/(\d+)`)
 	match := re.FindStringSubmatch(r.URL.Path)
@@ -80,22 +73,32 @@ func getMovie(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-
-	//Return the response as JSON
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(movie)
+	//Check if request Method type is GET
+	if r.Method == http.MethodGet {
+		//Return the response as JSON
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(movie)
+	} else if r.Method == http.MethodDelete { //Check if request Method type is GET
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Println(match)
+	} else {
+		http.Error(w, "Method not allowed!", http.StatusMethodNotAllowed)
+		return
+	}
 }
 
 func main() {
-	http.HandleFunc("/movies", getMovies)
-	http.HandleFunc("/movies/", getMovie)
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/movies", getMovies)
+	mux.HandleFunc("/movies/", handlerMovies)
 	// http.HandleFunc("/movies", createMovie)
 	// http.HandleFunc("/movies/", updateMovie)
-	// http.HandleFunc("/movies/", deleteMovie)
+	//mux.HandleFunc("/movies/", deleteMovie)
 
 	var address = "localhost:8080"
 	fmt.Printf("Server started at %s\n", address)
-	err := http.ListenAndServe(address, nil)
+	err := http.ListenAndServe(address, mux)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
