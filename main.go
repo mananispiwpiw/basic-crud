@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"regexp"
+	"strconv"
 )
 
 type Director struct {
@@ -47,18 +49,37 @@ var movieDatabase = map[string]Movie{
 }
 
 func handlerMovie(w http.ResponseWriter, r *http.Request) {
-	//Check if request Method type is not GET
-	if r.Method != http.MethodGet {
+
+	// Check if request Method type is GET
+	if r.Method == http.MethodGet {
+		// And if it is the correct method, it will continue to here
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(movieDatabase)
+
+	} else if r.Method == http.MethodPost { // Check if request method type is POST
+		// Decode the JSON request body into a Movie struct
+		var newMovie Movie
+		err := json.NewDecoder(r.Body).Decode(&newMovie)
+		if err != nil {
+			http.Error(w, "ERROR decoding JSON", http.StatusBadRequest)
+			return
+		}
+		// Generate ID
+		newMovie.ID = strconv.Itoa(rand.Intn(200))
+		// Add the new movie to the existing database
+		movieDatabase[newMovie.ID] = newMovie
+		// Return with the newest Database as JSON
+		w.Header().Set("Content-type", "application/json")
+		json.NewEncoder(w).Encode(movieDatabase)
+
+	} else {
 		http.Error(w, "Method not allowed!", http.StatusMethodNotAllowed)
 		return
 	}
-	//And if it is the correct method, it will continue to here
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(movieDatabase)
 }
 
 func handlerMovies(w http.ResponseWriter, r *http.Request) {
-	//Extract the ID from the URL
+	// Extract the ID from the URL
 	re := regexp.MustCompile(`/movies/(\d+)`)
 	match := re.FindStringSubmatch(r.URL.Path)
 	if len(match) != 2 {
@@ -67,22 +88,23 @@ func handlerMovies(w http.ResponseWriter, r *http.Request) {
 	}
 	movieID := match[1]
 
-	//Look up the movie in the database
+	// Look up the movie in the database
 	movie, found := movieDatabase[movieID]
 	if !found {
 		http.NotFound(w, r)
 		return
 	}
-	//Check if request Method type is GET
+
+	// Check if request Method type is GET
 	if r.Method == http.MethodGet {
-		//Return the response as JSON
+		// Return the response as JSON
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(movie)
 	} else if r.Method == http.MethodDelete { //Check if request Method type is GET
-		//Perform deletion
+		// Perform deletion
 		delete(movieDatabase, movieID)
 
-		//Return the response
+		// Return the response
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(movieDatabase)
 	} else {
@@ -94,10 +116,9 @@ func handlerMovies(w http.ResponseWriter, r *http.Request) {
 func main() {
 	mux := http.NewServeMux()
 
+	// Routes
 	mux.HandleFunc("/movies", handlerMovie)
 	mux.HandleFunc("/movies/", handlerMovies)
-	// http.HandleFunc("/movies", createMovie)
-	// http.HandleFunc("/movies/", updateMovie)
 
 	var address = "localhost:8080"
 	fmt.Printf("Server started at %s\n", address)
