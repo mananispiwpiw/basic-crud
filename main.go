@@ -100,10 +100,23 @@ func handlerMovies(w http.ResponseWriter, r *http.Request) {
 		// Return the response as JSON
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(movie)
-	} else if r.Method == http.MethodDelete { //Check if request Method type is GET
+	} else if r.Method == http.MethodDelete { // Check if request Method type is GET
 		// Perform deletion
 		delete(movieDatabase, movieID)
 
+		// Return the response
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(movieDatabase)
+	} else if r.Method == http.MethodPut { // Check if the request method type is PUT
+		// Decode the JSON request body into a Movie struct
+		var newMovie Movie
+		err := json.NewDecoder(r.Body).Decode(&newMovie)
+		if err != nil {
+			http.Error(w, "ERROR decoding JSON", http.StatusBadRequest)
+			return
+		}
+		// Perform updating
+		movieDatabase[movieID] = newMovie
 		// Return the response
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(movieDatabase)
