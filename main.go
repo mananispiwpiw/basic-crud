@@ -46,7 +46,7 @@ var movieDatabase = map[string]Movie{
 	},
 }
 
-func getMovies(w http.ResponseWriter, r *http.Request) {
+func handlerMovie(w http.ResponseWriter, r *http.Request) {
 	//Check if request Method type is not GET
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed!", http.StatusMethodNotAllowed)
@@ -94,11 +94,10 @@ func handlerMovies(w http.ResponseWriter, r *http.Request) {
 func main() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/movies", getMovies)
+	mux.HandleFunc("/movies", handlerMovie)
 	mux.HandleFunc("/movies/", handlerMovies)
 	// http.HandleFunc("/movies", createMovie)
 	// http.HandleFunc("/movies/", updateMovie)
-	//mux.HandleFunc("/movies/", deleteMovie)
 
 	var address = "localhost:8080"
 	fmt.Printf("Server started at %s\n", address)
